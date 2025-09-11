@@ -1,0 +1,67 @@
+name: wallet.biconomy-pipeline
+
+on:
+  push:
+    branches: 
+      - 'main'
+      - 'staging'
+      - 'testnet'
+env:
+  REPO_URL: "asia-southeast1-docker.pkg.dev/rivalz-be/rivalz" #sjc.vultrcr.com/rome"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs: 
+      commit_hash: ${{ steps.build-image.outputs.COMMIT_HASH }}
+      namespace: ${{ steps.build-image.outputs.NAMESPACE }}
+      service_name: ${{ steps.build-image.outputs.SERVICE_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: build and push image
+        id: build-image
+        run: |
+          REPO_NAME=$(echo "${{github.repository}}" | cut -d "/" -f 2)
+          echo "REPO_NAME=$REPO_NAME"
+          SERVICE_NAME=$(echo $REPO_NAME | cut -d '.' -f 2)
+          NAMESPACE=$(echo $REPO_NAME | cut -d '.' -f 1)
+          commit_hash=$(git rev-parse --short $GITHUB_SHA)
+          docker build -t ${REPO_URL}/$NAMESPACE-$SERVICE_NAME:${commit_hash} -f Dockerfile .
+          echo "${{ secrets.SERVICE_ACCOUNT_JSON }}" | base64 -d | docker login -u _json_key --password-stdin asia-southeast1-docker.pkg.dev
+          docker push ${REPO_URL}/$NAMESPACE-$SERVICE_NAME:${commit_hash}
+          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          echo "NAMESPACE=$NAMESPACE" >> $GITHUB_OUTPUT
+          echo "COMMIT_HASH=$commit_hash" >> $GITHUB_OUTPUT
+          
+  deploy:
+    runs-on: rivalz-dc
+    needs: build 
+    env:
+      COMMIT_HASH: ${{ needs.build.outputs.commit_hash }}
+      NAMESPACE: ${{ needs.build.outputs.namespace }}
+      SERVICE_NAME: ${{ needs.build.outputs.service_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: "Rivalz-ai/rivalz-helm-chart.git"
+          path: rivalz-chart
+          ref: main
+      - run: |
+          if [[ ${{ github.ref_name }} == "main" ]]; then
+            NAMESPACE="prod-${NAMESPACE}"
+          fi
+          if [[ ${{ github.ref_name }} == "staging" ]]; then
+            NAMESPACE="stg-${NAMESPACE}"
+          fi
+          if [[ ${{ github.ref_name }} == "testnet" ]]; then
+            NAMESPACE="test-${NAMESPACE}"
+          fi
+          echo "${{ secrets.DC_KUBECONFIG }}" | base64 -d >> dc_kubeconfig
+          helm upgrade --install ${SERVICE_NAME} rivalz-chart -f values.yaml -n ${NAMESPACE} \
+            --kubeconfig dc_kubeconfig \
+            --set image.tag=${COMMIT_HASH} \
+            --create-namespace
