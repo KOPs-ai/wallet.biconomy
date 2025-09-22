@@ -15,7 +15,7 @@ import { getSessionSigner, initChainConfig } from './biconomy.utils.js'
 import type { GrantPermissionResponse } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/grantPermission'
 import { RpcException } from '@nestjs/microservices'
 import { Instruction } from '@donleeit/protos/pb/typescript/biconomy/models/usePermission.js'
-import { BICONOMY_API_KEY } from '../app.settings.js'
+import { BICONOMY_API_KEY, VERIFICATION_GAS_BASE } from '../app.settings.js'
 import { IUserPermission } from './interfaces/user.permission.interface.js'
 
 @Injectable()
@@ -154,7 +154,9 @@ export class BiconomyService {
           typeof value === 'bigint' ? value.toString() : value
         )
       })
+      const verificationGas = BigInt(VERIFICATION_GAS_BASE)
       const executionPayload = await sessionSignerSessionMeeClient.usePermission({
+        verificationGasLimit: verificationGas,
         sessionDetails: sessionDetailByActions,
         mode: mode,
         feeToken: {
@@ -165,17 +167,20 @@ export class BiconomyService {
       })
 
       console.log({ hash: executionPayload.hash })
-
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
         hash: executionPayload.hash
       })
       this.logger.log('send tx success', { key: 'userPermission', data: receipt })
       // update usedCount
       await this.userPermissionModel.updateMany(
-        { orchestratorAddress: orchestratorAddress.toLowerCase(), strategyId },
+        {
+          orchestratorAddress: orchestratorAddress.toLowerCase(),
+          strategyId,
+          'sessionDetail.permissionId': sessionDetailByActions[0].permissionId
+        },
         { $inc: { usedCount: 1 } }
       )
-      return { txHash: executionPayload.hash }
+      return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
       this.logger.error('send tx failed', { key: 'userPermission', data: error })
       console.log(error)

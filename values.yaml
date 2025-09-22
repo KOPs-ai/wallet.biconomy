@@ -1,17 +1,17 @@
 replicaCount: 1
 type: app # There are app, worker, cronjob
-statefulset: false 
-nameOverride: "biconomy"
+statefulset: false
+nameOverride: 'biconomy'
 sidecar: true
 
 image:
   repository: asia-southeast1-docker.pkg.dev/rivalz-be/rivalz/wallet-biconomy
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "staging-latest"
+  tag: 'staging-latest'
   containerPort: 30000
 terminationGracePeriodSeconds: 60
-imagePullSecrets: 
+imagePullSecrets:
   - name: gar-registry
 
 secretMounts:
@@ -34,22 +34,46 @@ readinessProbe: []
 resources:
   limits:
     cpu: 500m
-    memory: "1Gi"
-  requests: 
-    cpu: "100m"
-    memory: "100Mi"
+    memory: '1Gi'
+  requests:
+    cpu: '100m'
+    memory: '100Mi'
 
 ingress:
   enabled: false
   kind: gateway ### with 2 values: gateway and ingress
   gateway: ingressgateway
   gatewayname: istio-system/rivalz-ai
-  hosts: 
+  hosts:
     - 'api-orchestration-v2.rivalz.ai'
-  servers: 
+  servers:
     - port: 30000
       name: http
       protocol: HTTP
 
-  uri_prefix: "/" ### Please mention ending slash
+  uri_prefix: '/' ### Please mention ending slash
   # uri_rewrite: "/"
+
+# istio
+istio:
+  destinationRule:
+    enabled: true
+    name: strategy-dr
+    # target only THIS service (FQDN)
+    host: strategy.stg-strategy.svc.cluster.local
+    # choose ONE mode below that matches your mesh:
+    # - ISTIO_MUTUAL: mesh mTLS between sidecars (most common)
+    # - DISABLE: plaintext end-to-end (no mesh mTLS)
+    # - SIMPLE: app itself terminates TLS on 30000 (less common)
+    tlsMode: ISTIO_MUTUAL
+    connectionPool:
+      http:
+        h2UpgradePolicy: UPGRADE # force HTTP/2 upstream
+        idleTimeout: 0s # don't kill long gRPC streams
+
+  virtualService:
+    enabled: false # set to true only if you need a custom timeout
+    name: strategy-vs
+    hosts:
+      - strategy.stg-strategy.svc.cluster.local
+    timeout: 600s

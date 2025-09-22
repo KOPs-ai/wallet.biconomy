@@ -13,10 +13,14 @@ export class BiconomyController implements BiconomyServiceController {
 
   @GrpcMethod('BiconomyService', 'UsePermission')
   async usePermission(request: UsePermissionRequest): Promise<UsePermissionResponse> {
-    const { txHash } = await this.biconomyService.usePermision({
+    const receipt = await this.biconomyService.usePermision({
       ...request,
       feeChainId: Number(request.feeChainId)
     })
-    return { txHash, chainId: Number(request.feeChainId) }
+    return {
+      txHash: receipt.txHash,
+      chainId: Number(request.feeChainId),
+      superTxHash: receipt.meeHash
+    }
   }
 }

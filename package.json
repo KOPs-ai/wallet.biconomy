@@ -1,5 +1,5 @@
 {
-  "name": "balance.balance",
+  "name": "wallet.biconomy",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -23,8 +23,8 @@
     "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/pb --proto_path=./src/proto ./src/proto/**/*.proto --ts_proto_opt=nestJs=true --ts_proto_opt=esModuleInterop=true"
   },
   "dependencies": {
-    "@biconomy/abstractjs": "^1.1.1",
-    "@donleeit/protos": "^1.0.4",
+    "@biconomy/abstractjs": "^1.1.7",
+    "@donleeit/protos": "^1.0.18",
     "@grpc/grpc-js": "^1.13.4",
     "@grpc/proto-loader": "^0.8.0",
     "@nestjs/common": "^11.0.1",
