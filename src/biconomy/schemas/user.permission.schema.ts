@@ -6,6 +6,8 @@ export const userPermissionSchema = new Schema(
     walletAddress: { type: String, required: true, lowercase: true },
     status: { type: String, required: true, default: 'active' },
     orchestratorAddress: { type: String, required: false, lowercase: true },
+    actionTargetSelector: { type: String, required: false },
+    actionTarget: { type: String, required: false },
     sessionDetail: { type: Object, required: false },
     usedCount: { type: Number, required: false, default: 0 }
   },

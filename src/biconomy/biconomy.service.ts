@@ -38,7 +38,7 @@ export class BiconomyService {
       const { orchestratorAddress, strategyId, txData, feeToken, feeChainId } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
-        orchestratorAddress
+        orchestratorAddress: orchestratorAddress.toLowerCase()
       })
 
       if (!strategyUser) {
@@ -106,19 +106,27 @@ export class BiconomyService {
 
       const sessionDetailByActions: GrantPermissionResponse = []
       for (const item of txData) {
-        const chainIdNumber = Number(item.chainId)
+        // const chainIdNumber = Number(item.chainId)
         const calls = item.calls
         for (let index = 0; index < calls.length; index++) {
           const call = calls[index]
+          // const action = sessionDetails.find(
+          //   (session) =>
+          //     session.enableSessionData.enableSession.sessionToEnable.chainId ===
+          //       BigInt(chainIdNumber) &&
+          //     session.enableSessionData.enableSession.sessionToEnable.actions.some(
+          //       (s) =>
+          //         s.actionTarget.toLowerCase() === call.to.toLowerCase() &&
+          //         s.actionTargetSelector === call.functionSelector
+          //     )
+          // )
+          const userPermission = userPermissions.find(
+            (f) =>
+              f.actionTargetSelector === call.functionSelector &&
+              f.actionTarget?.toLowerCase() === call.to.toLowerCase()
+          )
           const action = sessionDetails.find(
-            (session) =>
-              session.enableSessionData.enableSession.sessionToEnable.chainId ===
-                BigInt(chainIdNumber) &&
-              session.enableSessionData.enableSession.sessionToEnable.actions.some(
-                (s) =>
-                  s.actionTarget.toLowerCase() === call.to.toLowerCase() &&
-                  s.actionTargetSelector === call.functionSelector
-              )
+            (s) => s.permissionId === userPermission?.sessionDetail?.permissionId
           )
           if (!action) {
             throw new RpcException('Action not found')
@@ -152,7 +160,8 @@ export class BiconomyService {
         mode,
         instructions: JSON.stringify(instructions, (key, value) =>
           typeof value === 'bigint' ? value.toString() : value
-        )
+        ),
+        permissionUse
       })
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
       const executionPayload = await sessionSignerSessionMeeClient.usePermission({
@@ -180,6 +189,7 @@ export class BiconomyService {
         },
         { $inc: { usedCount: 1 } }
       )
+
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
       this.logger.error('send tx failed', { key: 'userPermission', data: error })

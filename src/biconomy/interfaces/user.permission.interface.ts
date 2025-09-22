@@ -5,6 +5,8 @@ export interface IUserPermission {
   orchestratorAddress?: string
   sessionDetail?: any
   status?: string
+  actionTargetSelector?: string
+  actionTarget?: string
   usedCount?: number
   createdAt?: Date
   updatedAt?: Date
