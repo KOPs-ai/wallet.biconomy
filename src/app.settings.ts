@@ -17,6 +17,7 @@ export const SERVICE_NAME = process.env.SERVICE_NAME || 'balance.balance'
 export const APM_ENABLE = true
 export const KAFKA_LOG_ENABLE = true
 export const BICONOMY_API_KEY = process.env.BICONOMY_API_KEY || ''
+export const VERIFICATION_GAS_BASE = process.env.VERIFICATION_GAS_BASE || '1000000'
 
 export let PRICE_SERVICE_URL = 'price.stg-pricing:30000'
 export let DB_CONNECTION = {}
@@ -36,7 +37,7 @@ export async function loadEnvFile() {
     if (DB_CONNECTION) {
       const dbPrefix = DB_CONNECTION['HOST'].split('//')[0]
       const dbHost = DB_CONNECTION['HOST'].split('//')[1]
-      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/kops?authSource=admin`
+      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/strategies?authSource=admin`
     }
   } catch (error) {
     console.error('Error loading settings from Vault:', error)

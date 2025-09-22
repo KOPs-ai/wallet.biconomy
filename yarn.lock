@@ -323,10 +323,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@biconomy/abstractjs@^1.1.1":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@biconomy/abstractjs/-/abstractjs-1.1.2.tgz#05ad197f13eea6d37a5df572bfc0918204467859"
-  integrity sha512-kF8LOi18q9zi0q7LRI5Ptq7k4dCKC6WeDBMbiSRceqFGYZCdF6X5bzGSFnJjIHWSDNBnQsiCFoGT4hnMRihFnQ==
+"@biconomy/abstractjs@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@biconomy/abstractjs/-/abstractjs-1.1.7.tgz#b5591ec04fd61f5158ff31459471d976fb7fdd1a"
+  integrity sha512-DvNMH/3wqo6mA+KmdhkZjHpqRha57Nd0byTRw6BP2HQ+SdP4sgRqPA0MCa2X6CdNEqvqPy0vxXitJb46iWG/Tg==
 
 "@biconomy/account@^4.5.7":
   version "4.5.7"
@@ -357,10 +357,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@donleeit/protos@^1.0.4":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@donleeit/protos/-/protos-1.0.6.tgz#a31ad6d84249677fdc9dcee5d66ba8291e898f6a"
-  integrity sha512-502t+MD8NuBPPAjnm33eB5CuIZJ0SnQhPLJaCJASQjcQizubQFey485KtQrWZmwtu8Hh721IxwyxOJbbdt/EfQ==
+"@donleeit/protos@^1.0.18":
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/@donleeit/protos/-/protos-1.0.18.tgz#f362efe865d19960602f0d329e62bfc05521ae63"
+  integrity sha512-MwRayBjr5pOesEmWKy8OHughXYHA190KALhj1FL7kVzb1Hmx8jo81xkXtbjNl5VqlIawm1eLwUAHnbpZuxGfHw==
   dependencies:
     "@grpc/grpc-js" "^1.13.4"
     "@nestjs/common" "^11.1.6"
