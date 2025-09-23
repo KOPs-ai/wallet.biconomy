@@ -176,7 +176,7 @@ export class BiconomyService {
           chainId: feeChainId
         }
       }
-      if (SPONSORSHIP) {
+      if (SPONSORSHIP === 'true') {
         permissionToUse = {
           verificationGasLimit: verificationGas,
           sessionDetails: sessionDetailByActions,
