@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { createMeeClient, meeSessionActions, toMultichainNexusAccount } from '@biconomy/abstractjs'
+import {
+  ADDRESS_ZERO,
+  createMeeClient,
+  meeSessionActions,
+  toMultichainNexusAccount
+} from '@biconomy/abstractjs'
 
 import { type Hex } from 'viem'
 import { InjectModel } from '@nestjs/mongoose'
@@ -10,8 +15,9 @@ import { getSessionSigner, initChainConfig } from './biconomy.utils.js'
 import type { GrantPermissionResponse } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/grantPermission'
 import { RpcException } from '@nestjs/microservices'
 import { Instruction } from '@donleeit/protos/pb/typescript/biconomy/models/usePermission.js'
-import { BICONOMY_API_KEY, VERIFICATION_GAS_BASE } from '../app.settings.js'
+import { BICONOMY_API_KEY, SPONSORSHIP, VERIFICATION_GAS_BASE } from '../app.settings.js'
 import { IUserPermission } from './interfaces/user.permission.interface.js'
+import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/mee/useMeePermission.js'
 
 @Injectable()
 export class BiconomyService {
@@ -30,7 +36,7 @@ export class BiconomyService {
     feeChainId: number
   }) {
     try {
-      const { orchestratorAddress, strategyId, txData } = params
+      const { orchestratorAddress, strategyId, txData, feeToken, feeChainId } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
         orchestratorAddress: orchestratorAddress.toLowerCase()
@@ -159,18 +165,30 @@ export class BiconomyService {
         permissionUse
       })
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
-      const executionPayload = await sessionSignerSessionMeeClient.usePermission({
+
+      let permissionToUse: UseMeePermissionParams = {
         verificationGasLimit: verificationGas,
         sessionDetails: sessionDetailByActions,
         mode: mode,
-        // feeToken: {
-        //   address: (feeToken as Hex) || ADDRESS_ZERO,
-        //   chainId: feeChainId
-        // },
-        sponsorship: true,
-        instructions: instructions
-      })
-
+        instructions: instructions,
+        feeToken: {
+          address: (feeToken as Hex) || ADDRESS_ZERO,
+          chainId: feeChainId
+        }
+      }
+      if (SPONSORSHIP) {
+        permissionToUse = {
+          verificationGasLimit: verificationGas,
+          sessionDetails: sessionDetailByActions,
+          mode: mode,
+          instructions: instructions,
+          feeToken: {
+            address: (feeToken as Hex) || ADDRESS_ZERO,
+            chainId: feeChainId
+          }
+        }
+      }
+      const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
       console.log({ hash: executionPayload.hash })
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
         hash: executionPayload.hash

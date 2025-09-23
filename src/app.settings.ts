@@ -18,6 +18,7 @@ export const APM_ENABLE = true
 export const KAFKA_LOG_ENABLE = true
 export const BICONOMY_API_KEY = process.env.BICONOMY_API_KEY || ''
 export const VERIFICATION_GAS_BASE = process.env.VERIFICATION_GAS_BASE || '1000000'
+export const SPONSORSHIP = process.env.SPONSORSHIP || false
 
 export let PRICE_SERVICE_URL = 'price.stg-pricing:30000'
 export let DB_CONNECTION = {}
