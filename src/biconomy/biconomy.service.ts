@@ -182,10 +182,7 @@ export class BiconomyService {
           sessionDetails: sessionDetailByActions,
           mode: mode,
           instructions: instructions,
-          feeToken: {
-            address: (feeToken as Hex) || ADDRESS_ZERO,
-            chainId: feeChainId
-          }
+          sponsorship: true
         }
       }
       const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
