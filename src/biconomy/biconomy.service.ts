@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import {
-  createMeeClient,
-  meeSessionActions,
-  toMultichainNexusAccount,
-  ADDRESS_ZERO
-} from '@biconomy/abstractjs'
+import { createMeeClient, meeSessionActions, toMultichainNexusAccount } from '@biconomy/abstractjs'
 
 import { type Hex } from 'viem'
 import { InjectModel } from '@nestjs/mongoose'
@@ -35,7 +30,7 @@ export class BiconomyService {
     feeChainId: number
   }) {
     try {
-      const { orchestratorAddress, strategyId, txData, feeToken, feeChainId } = params
+      const { orchestratorAddress, strategyId, txData } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
         orchestratorAddress: orchestratorAddress.toLowerCase()
@@ -168,10 +163,11 @@ export class BiconomyService {
         verificationGasLimit: verificationGas,
         sessionDetails: sessionDetailByActions,
         mode: mode,
-        feeToken: {
-          address: (feeToken as Hex) || ADDRESS_ZERO,
-          chainId: feeChainId
-        },
+        // feeToken: {
+        //   address: (feeToken as Hex) || ADDRESS_ZERO,
+        //   chainId: feeChainId
+        // },
+        sponsorship: true,
         instructions: instructions
       })
 
