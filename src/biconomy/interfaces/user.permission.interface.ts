@@ -8,6 +8,7 @@ export interface IUserPermission {
   actionTargetSelector?: string
   actionTarget?: string
   usedCount?: number
+  permissionId?: string
   createdAt?: Date
   updatedAt?: Date
 }

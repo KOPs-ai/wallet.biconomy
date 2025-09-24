@@ -9,7 +9,8 @@ export const userPermissionSchema = new Schema(
     actionTargetSelector: { type: String, required: false },
     actionTarget: { type: String, required: false },
     sessionDetail: { type: Object, required: false },
-    usedCount: { type: Number, required: false, default: 0 }
+    usedCount: { type: Number, required: false, default: 0 },
+    permissionId: { type: String, required: false }
   },
   {
     collection: 'user_permissions',

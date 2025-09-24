@@ -357,10 +357,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@donleeit/protos@^1.0.18":
-  version "1.0.18"
-  resolved "https://registry.yarnpkg.com/@donleeit/protos/-/protos-1.0.18.tgz#f362efe865d19960602f0d329e62bfc05521ae63"
-  integrity sha512-MwRayBjr5pOesEmWKy8OHughXYHA190KALhj1FL7kVzb1Hmx8jo81xkXtbjNl5VqlIawm1eLwUAHnbpZuxGfHw==
+"@donleeit/protos@^1.0.21":
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/@donleeit/protos/-/protos-1.0.21.tgz#dad73615b2c3e4eeb401442072cf67f622700c5f"
+  integrity sha512-F3iqKfoxGYggQQgEyCDEhzxkiWiPm7gogDLNuivELKTB3NuC7hrf/dBS5uvxvBKeV6NPJnpKX4JTdE8xaLP4yw==
   dependencies:
     "@grpc/grpc-js" "^1.13.4"
     "@nestjs/common" "^11.1.6"

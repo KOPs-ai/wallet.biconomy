@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import {
-  ADDRESS_ZERO,
-  createMeeClient,
-  meeSessionActions,
-  toMultichainNexusAccount
-} from '@biconomy/abstractjs'
+import { createMeeClient, meeSessionActions, toMultichainNexusAccount } from '@biconomy/abstractjs'
 
 import { type Hex } from 'viem'
 import { InjectModel } from '@nestjs/mongoose'
@@ -18,6 +13,7 @@ import { Instruction } from '@donleeit/protos/pb/typescript/biconomy/models/useP
 import { BICONOMY_API_KEY, SPONSORSHIP, VERIFICATION_GAS_BASE } from '../app.settings.js'
 import { IUserPermission } from './interfaces/user.permission.interface.js'
 import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/mee/useMeePermission.js'
+import { ZeroAddress } from 'ethers'
 
 @Injectable()
 export class BiconomyService {
@@ -124,8 +120,10 @@ export class BiconomyService {
           const userPermission = userPermissions.find(
             (f) =>
               f.actionTargetSelector === call.functionSelector &&
-              f.actionTarget?.toLowerCase() === call.to.toLowerCase()
+              f.actionTarget?.toLowerCase() === call.to.toLowerCase() &&
+              f.permissionId === call.permissionId
           )
+
           const action = sessionDetails.find(
             (s) => s.permissionId === userPermission?.sessionDetail?.permissionId
           )
@@ -157,13 +155,7 @@ export class BiconomyService {
         (f) => f.sessionDetail?.permissionId === sessionDetailByActions[0].permissionId
       )
       const mode = (permissionUse?.usedCount || 0) > 0 ? 'USE' : 'ENABLE_AND_USE'
-      console.log({
-        mode,
-        instructions: JSON.stringify(instructions, (key, value) =>
-          typeof value === 'bigint' ? value.toString() : value
-        ),
-        permissionUse
-      })
+
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
 
       let permissionToUse: UseMeePermissionParams = {
@@ -172,7 +164,7 @@ export class BiconomyService {
         mode: mode,
         instructions: instructions,
         feeToken: {
-          address: (feeToken as Hex) || ADDRESS_ZERO,
+          address: (feeToken as Hex) || ZeroAddress,
           chainId: feeChainId
         }
       }
@@ -185,6 +177,8 @@ export class BiconomyService {
           sponsorship: true
         }
       }
+      console.log({ permissionToUse, sponsorship: SPONSORSHIP, mode })
+
       const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
       console.log({ hash: executionPayload.hash })
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
