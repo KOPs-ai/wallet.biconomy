@@ -38,7 +38,7 @@ export async function loadEnvFile() {
     if (DB_CONNECTION) {
       const dbPrefix = DB_CONNECTION['HOST'].split('//')[0]
       const dbHost = DB_CONNECTION['HOST'].split('//')[1]
-      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/strategies?authSource=admin`
+      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/kops_v2?authSource=admin`
     }
   } catch (error) {
     console.error('Error loading settings from Vault:', error)
