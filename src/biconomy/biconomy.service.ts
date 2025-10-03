@@ -10,19 +10,27 @@ import { getSessionSigner, initChainConfig } from './biconomy.utils.js'
 import type { GrantPermissionResponse } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/grantPermission'
 import { RpcException } from '@nestjs/microservices'
 import { Instruction } from '@donleeit/protos/pb/typescript/biconomy/models/usePermission.js'
-import { BICONOMY_API_KEY, SPONSORSHIP, VERIFICATION_GAS_BASE } from '../app.settings.js'
+import {
+  BICONOMY_API_KEY,
+  HYPEEVM_RPC,
+  SPONSORSHIP,
+  VERIFICATION_GAS_BASE
+} from '../app.settings.js'
 import { IUserPermission } from './interfaces/user.permission.interface.js'
 import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/mee/useMeePermission.js'
-import { ZeroAddress } from 'ethers'
+import { JsonRpcProvider, ZeroAddress } from 'ethers'
 
 @Injectable()
 export class BiconomyService {
   logger = new Logger()
+  hyperEvmProvider: JsonRpcProvider
   constructor(
     @InjectModel('StrategyUser') private strategyUserModel: Model<IStrategyUser>,
     @InjectModel('Strategy') private strategyModel: Model<IStrategy>,
     @InjectModel('UserPermission') private userPermissionModel: Model<IUserPermission>
-  ) {}
+  ) {
+    this.hyperEvmProvider = new JsonRpcProvider(HYPEEVM_RPC)
+  }
 
   async usePermision(params: {
     orchestratorAddress: string
@@ -138,19 +146,29 @@ export class BiconomyService {
         }
       }
       const sessionSignerSessionMeeClient = sessionSignerMeeClient.extend(meeSessionActions)
-      const instructions = txData.map((item) => {
-        const chainIdNumber = Number(item.chainId)
-        return {
-          chainId: chainIdNumber,
-          calls: item.calls.map((call) => {
-            return {
-              to: call.to as Hex,
-              data: call.data as Hex,
-              value: BigInt(call.value || '0')
-            }
-          })
-        }
-      })
+      const instructions = await Promise.all(
+        txData.map(async (item) => {
+          const chainIdNumber = Number(item.chainId)
+          return {
+            chainId: chainIdNumber,
+            calls: await Promise.all(
+              item.calls.map(async (call) => {
+                const estimateGas = await this.hyperEvmProvider.estimateGas({
+                  from: orchestratorAddress as Hex,
+                  to: call.to as Hex,
+                  data: call.data as Hex
+                })
+                return {
+                  to: call.to as Hex,
+                  data: call.data as Hex,
+                  value: BigInt(call.value || '0'),
+                  gasLimit: estimateGas
+                }
+              })
+            )
+          }
+        })
+      )
       const permissionUse = userPermissions.find(
         (f) => f.sessionDetail?.permissionId === sessionDetailByActions[0].permissionId
       )
