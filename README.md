@@ -1,4 +1,4 @@
-# Template Microservice
+# wallet.biconomy Microservice
 
 A NestJS-based microservice that provides blockchain token balance and price information via gRPC protocol. This service integrates with multiple blockchain networks and external price feeds to deliver comprehensive balance and pricing data.
 

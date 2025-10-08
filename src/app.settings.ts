@@ -18,6 +18,7 @@ export const APM_ENABLE = true
 export const KAFKA_LOG_ENABLE = true
 export const BICONOMY_API_KEY = process.env.BICONOMY_API_KEY || ''
 export const VERIFICATION_GAS_BASE = process.env.VERIFICATION_GAS_BASE || '1000000'
+export const SPONSORSHIP = process.env.SPONSORSHIP || 'false'
 
 export let PRICE_SERVICE_URL = 'price.stg-pricing:30000'
 export let DB_CONNECTION = {}
@@ -37,7 +38,7 @@ export async function loadEnvFile() {
     if (DB_CONNECTION) {
       const dbPrefix = DB_CONNECTION['HOST'].split('//')[0]
       const dbHost = DB_CONNECTION['HOST'].split('//')[1]
-      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/strategies?authSource=admin`
+      DB_CONNECTION_STRING = `${dbPrefix}//${DB_CONNECTION['USERNAME']}:${DB_CONNECTION['PASSWORD']}@${dbHost}:${DB_CONNECTION['PORT']}/kops_v2?authSource=admin`
     }
   } catch (error) {
     console.error('Error loading settings from Vault:', error)
@@ -49,6 +50,20 @@ export async function loadEnvFile() {
   } else {
   }
 }
+
+// export async function loadKMSEnv() {
+//   if (process.env.MODE == 'dev') return
+//   const dataFromVaults = await getVaultData('biconomy/signer')
+//   const signers = JSON.parse(dataFromVaults['SESSION_SIGNER'].toString())
+//   const sessionSigner = signers[address]
+//   if (process.env.SESSION_SIGNER_WALLET_SECRET) {
+//     const [responseCDP] = await kmsClient.decrypt({
+//       name: kmsKeyName,
+//       ciphertext: process.env.DISTRIBUTOR_PRIV
+//     })
+//     DISTRIBUTOR_PRIV = Buffer.from(responseCDP.plaintext).toString()
+//   }
+// }
 
 export async function getVaultData(key: string) {
   try {

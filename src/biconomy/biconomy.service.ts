@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common'
-import {
-  createMeeClient,
-  meeSessionActions,
-  toMultichainNexusAccount,
-  ADDRESS_ZERO
-} from '@biconomy/abstractjs'
+import { createMeeClient, meeSessionActions, toMultichainNexusAccount } from '@biconomy/abstractjs'
 
 import { type Hex } from 'viem'
 import { InjectModel } from '@nestjs/mongoose'
@@ -15,17 +10,27 @@ import { getSessionSigner, initChainConfig } from './biconomy.utils.js'
 import type { GrantPermissionResponse } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/grantPermission'
 import { RpcException } from '@nestjs/microservices'
 import { Instruction } from '@donleeit/protos/pb/typescript/biconomy/models/usePermission.js'
-import { BICONOMY_API_KEY, VERIFICATION_GAS_BASE } from '../app.settings.js'
+import {
+  BICONOMY_API_KEY,
+  HYPEEVM_RPC,
+  SPONSORSHIP,
+  VERIFICATION_GAS_BASE
+} from '../app.settings.js'
 import { IUserPermission } from './interfaces/user.permission.interface.js'
+import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/mee/useMeePermission.js'
+import { JsonRpcProvider, ZeroAddress } from 'ethers'
 
 @Injectable()
 export class BiconomyService {
   logger = new Logger()
+  hyperEvmProvider: JsonRpcProvider
   constructor(
     @InjectModel('StrategyUser') private strategyUserModel: Model<IStrategyUser>,
     @InjectModel('Strategy') private strategyModel: Model<IStrategy>,
     @InjectModel('UserPermission') private userPermissionModel: Model<IUserPermission>
-  ) {}
+  ) {
+    this.hyperEvmProvider = new JsonRpcProvider(HYPEEVM_RPC)
+  }
 
   async usePermision(params: {
     orchestratorAddress: string
@@ -38,7 +43,7 @@ export class BiconomyService {
       const { orchestratorAddress, strategyId, txData, feeToken, feeChainId } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
-        orchestratorAddress
+        orchestratorAddress: orchestratorAddress.toLowerCase()
       })
 
       if (!strategyUser) {
@@ -75,7 +80,6 @@ export class BiconomyService {
       // if (!strategyUser.sessionDetail) {
       //   throw new RpcException('Session detail not found')
       // }
-
       if (userPermissions.length === 0) {
         throw new RpcException('User permission not found')
       }
@@ -106,19 +110,28 @@ export class BiconomyService {
 
       const sessionDetailByActions: GrantPermissionResponse = []
       for (const item of txData) {
-        const chainIdNumber = Number(item.chainId)
+        // const chainIdNumber = Number(item.chainId)
         const calls = item.calls
         for (let index = 0; index < calls.length; index++) {
           const call = calls[index]
+          // const action = sessionDetails.find(
+          //   (session) =>
+          //     session.enableSessionData.enableSession.sessionToEnable.chainId ===
+          //       BigInt(chainIdNumber) &&
+          //     session.enableSessionData.enableSession.sessionToEnable.actions.some(
+          //       (s) =>
+          //         s.actionTarget.toLowerCase() === call.to.toLowerCase() &&
+          //         s.actionTargetSelector === call.functionSelector
+          //     )
+          // )
+          const userPermission = userPermissions.find(
+            (f) =>
+              f.actionTargetSelector === call.functionSelector &&
+              f.actionTarget?.toLowerCase() === call.to.toLowerCase() &&
+              f.permissionId === call.permissionId
+          )
           const action = sessionDetails.find(
-            (session) =>
-              session.enableSessionData.enableSession.sessionToEnable.chainId ===
-                BigInt(chainIdNumber) &&
-              session.enableSessionData.enableSession.sessionToEnable.actions.some(
-                (s) =>
-                  s.actionTarget.toLowerCase() === call.to.toLowerCase() &&
-                  s.actionTargetSelector === call.functionSelector
-              )
+            (s) => s.permissionId === userPermission?.sessionDetail?.permissionId
           )
           if (!action) {
             throw new RpcException('Action not found')
@@ -131,41 +144,58 @@ export class BiconomyService {
         }
       }
       const sessionSignerSessionMeeClient = sessionSignerMeeClient.extend(meeSessionActions)
-      const instructions = txData.map((item) => {
-        const chainIdNumber = Number(item.chainId)
-        return {
-          chainId: chainIdNumber,
-          calls: item.calls.map((call) => {
-            return {
-              to: call.to as Hex,
-              data: call.data as Hex,
-              value: BigInt(call.value || '0')
-            }
-          })
-        }
-      })
+      const instructions = await Promise.all(
+        txData.map(async (item) => {
+          const chainIdNumber = Number(item.chainId)
+          return {
+            chainId: chainIdNumber,
+            calls: await Promise.all(
+              item.calls.map(async (call) => {
+                const estimateGas = await this.hyperEvmProvider.estimateGas({
+                  from: orchestratorAddress as Hex,
+                  to: call.to as Hex,
+                  data: call.data as Hex
+                })
+                return {
+                  to: call.to as Hex,
+                  data: call.data as Hex,
+                  value: BigInt(call.value || '0'),
+                  gasLimit: estimateGas
+                }
+              })
+            )
+          }
+        })
+      )
       const permissionUse = userPermissions.find(
         (f) => f.sessionDetail?.permissionId === sessionDetailByActions[0].permissionId
       )
       const mode = (permissionUse?.usedCount || 0) > 0 ? 'USE' : 'ENABLE_AND_USE'
-      console.log({
-        mode,
-        instructions: JSON.stringify(instructions, (key, value) =>
-          typeof value === 'bigint' ? value.toString() : value
-        )
-      })
+
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
-      const executionPayload = await sessionSignerSessionMeeClient.usePermission({
+
+      let permissionToUse: UseMeePermissionParams = {
         verificationGasLimit: verificationGas,
         sessionDetails: sessionDetailByActions,
         mode: mode,
+        instructions: instructions,
         feeToken: {
-          address: (feeToken as Hex) || ADDRESS_ZERO,
+          address: (feeToken as Hex) || ZeroAddress,
           chainId: feeChainId
-        },
-        instructions: instructions
-      })
+        }
+      }
+      if (SPONSORSHIP === 'true') {
+        permissionToUse = {
+          verificationGasLimit: verificationGas,
+          sessionDetails: sessionDetailByActions,
+          mode: mode,
+          instructions: instructions,
+          sponsorship: true
+        }
+      }
+      console.log({ permissionToUse, sponsorship: SPONSORSHIP, mode })
 
+      const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
       console.log({ hash: executionPayload.hash })
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
         hash: executionPayload.hash
@@ -180,6 +210,7 @@ export class BiconomyService {
         },
         { $inc: { usedCount: 1 } }
       )
+
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
       this.logger.error('send tx failed', { key: 'userPermission', data: error })
