@@ -16,7 +16,7 @@ imagePullSecrets:
 
 secretMounts:
   - name: env
-    secretName: environment
+    secretName: wallet-env
     path: /app/.env
     subPath: .env
 
