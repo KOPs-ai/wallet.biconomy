@@ -35,7 +35,7 @@ jobs:
           echo "COMMIT_HASH=$commit_hash" >> $GITHUB_OUTPUT
           
   deploy:
-    runs-on: rivalz-dc
+    runs-on: kops-ai-dc
     needs: build 
     env:
       COMMIT_HASH: ${{ needs.build.outputs.commit_hash }}
