@@ -80,7 +80,6 @@ export class BiconomyService {
       // if (!strategyUser.sessionDetail) {
       //   throw new RpcException('Session detail not found')
       // }
-
       if (userPermissions.length === 0) {
         throw new RpcException('User permission not found')
       }
@@ -131,7 +130,6 @@ export class BiconomyService {
               f.actionTarget?.toLowerCase() === call.to.toLowerCase() &&
               f.permissionId === call.permissionId
           )
-
           const action = sessionDetails.find(
             (s) => s.permissionId === userPermission?.sessionDetail?.permissionId
           )

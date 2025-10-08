@@ -25,6 +25,7 @@
   "dependencies": {
     "@biconomy/abstractjs": "^1.1.8",
     "@donleeit/protos": "^1.0.21",
+    "@google-cloud/kms": "^5.2.0",
     "@grpc/grpc-js": "^1.13.4",
     "@grpc/proto-loader": "^0.8.0",
     "@nestjs/common": "^11.0.1",

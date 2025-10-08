@@ -51,6 +51,20 @@ export async function loadEnvFile() {
   }
 }
 
+// export async function loadKMSEnv() {
+//   if (process.env.MODE == 'dev') return
+//   const dataFromVaults = await getVaultData('biconomy/signer')
+//   const signers = JSON.parse(dataFromVaults['SESSION_SIGNER'].toString())
+//   const sessionSigner = signers[address]
+//   if (process.env.SESSION_SIGNER_WALLET_SECRET) {
+//     const [responseCDP] = await kmsClient.decrypt({
+//       name: kmsKeyName,
+//       ciphertext: process.env.DISTRIBUTOR_PRIV
+//     })
+//     DISTRIBUTOR_PRIV = Buffer.from(responseCDP.plaintext).toString()
+//   }
+// }
+
 export async function getVaultData(key: string) {
   try {
     const loginResult = await vaultClient.userpassLogin({
