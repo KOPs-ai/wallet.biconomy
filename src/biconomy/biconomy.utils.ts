@@ -22,7 +22,6 @@ export async function getSessionSigner(address: string) {
     const sessionSigner = signers[address]
 
     const kmsFromVaults = await getVaultData('kms')
-    console.log({ kmsFromVaults })
 
     const email = kmsFromVaults['email']
     const privateKey = kmsFromVaults['privateKey']
