@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { createMeeClient, meeSessionActions, toMultichainNexusAccount } from '@biconomy/abstractjs'
 
 import { type Hex } from 'viem'
@@ -19,17 +19,22 @@ import {
 import { IUserPermission } from './interfaces/user.permission.interface.js'
 import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules/validators/smartSessions/decorators/mee/useMeePermission.js'
 import { JsonRpcProvider, ZeroAddress } from 'ethers'
+import { KafkaLogger } from '../kafka/kafka.logger.js'
+import { KafkaService } from '../kafka/kafka.service.js'
+import { ILogData } from 'src/app.type.js'
 
 @Injectable()
 export class BiconomyService {
-  logger = new Logger()
+  logger: KafkaLogger
   hyperEvmProvider: JsonRpcProvider
   constructor(
     @InjectModel('StrategyUser') private strategyUserModel: Model<IStrategyUser>,
     @InjectModel('Strategy') private strategyModel: Model<IStrategy>,
-    @InjectModel('UserPermission') private userPermissionModel: Model<IUserPermission>
+    @InjectModel('UserPermission') private userPermissionModel: Model<IUserPermission>,
+    private readonly kafkaService: KafkaService
   ) {
     this.hyperEvmProvider = new JsonRpcProvider(HYPEEVM_RPC)
+    this.logger = new KafkaLogger(kafkaService)
   }
 
   async usePermision(params: {
@@ -224,7 +229,11 @@ export class BiconomyService {
 
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
-      this.logger.error('send tx failed', { key: 'userPermission', data: error })
+      const logData: ILogData = {
+        key: 'usePermision',
+        data: { error, data: params }
+      }
+      this.logger.error(JSON.stringify(logData), undefined, 'usePermision')
       console.log(error)
       throw new RpcException(error as object)
     }
