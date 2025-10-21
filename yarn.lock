@@ -323,10 +323,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@biconomy/abstractjs@^1.1.8":
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/@biconomy/abstractjs/-/abstractjs-1.1.8.tgz#073a3ec23174d5966423be03892f30f05d7e46ca"
-  integrity sha512-J2O5ZGW8CNL+PqMzHP9Ep/cab4D7h5a/EvtTe/lQj75a/kmPmu0Wf0AsiC8Qn3ikyo56DJQkIonF1pjVl8z9kQ==
+"@biconomy/abstractjs@^1.1.13":
+  version "1.1.13"
+  resolved "https://registry.yarnpkg.com/@biconomy/abstractjs/-/abstractjs-1.1.13.tgz#706aa47e7f7b0cc26bf0ea631835ec969181ba51"
+  integrity sha512-BSkTUhYVG7GyzMMvckfrA/mOX1oXD8FilV0mbRDYoC97RAAp/sMBTBfB59vWOGTkVibtCJPcj85age+x0OhN7w==
 
 "@biconomy/account@^4.5.7":
   version "4.5.7"

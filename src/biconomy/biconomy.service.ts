@@ -174,8 +174,19 @@ export class BiconomyService {
 
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
 
+      const totalCallGasLimit = instructions.reduce((acc, item) => {
+        return (
+          acc +
+          item.calls.reduce((acc, call) => {
+            return acc + Number(call.gasLimit)
+          }, 0)
+        )
+      }, 0)
+      const verificationGasLimit = verificationGas - BigInt(Math.floor(totalCallGasLimit))
+      console.log({ totalCallGasLimit, verificationGasLimit })
+
       let permissionToUse: UseMeePermissionParams = {
-        verificationGasLimit: verificationGas,
+        verificationGasLimit: verificationGasLimit,
         sessionDetails: sessionDetailByActions,
         mode: mode,
         instructions: instructions,
@@ -186,7 +197,7 @@ export class BiconomyService {
       }
       if (SPONSORSHIP === 'true') {
         permissionToUse = {
-          verificationGasLimit: verificationGas,
+          verificationGasLimit: verificationGasLimit,
           sessionDetails: sessionDetailByActions,
           mode: mode,
           instructions: instructions,
