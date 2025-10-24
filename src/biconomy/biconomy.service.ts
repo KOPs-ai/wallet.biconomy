@@ -21,7 +21,8 @@ import { UseMeePermissionParams } from '@biconomy/abstractjs/dist/_types/modules
 import { JsonRpcProvider, ZeroAddress } from 'ethers'
 import { KafkaLogger } from '../kafka/kafka.logger.js'
 import { KafkaService } from '../kafka/kafka.service.js'
-import { ILogData } from 'src/app.type.js'
+import { ILogData } from '../app.type.js'
+import { IBiconomyTransaction } from './interfaces/biconomyTransaction.interface.js'
 
 @Injectable()
 export class BiconomyService {
@@ -31,6 +32,8 @@ export class BiconomyService {
     @InjectModel('StrategyUser') private strategyUserModel: Model<IStrategyUser>,
     @InjectModel('Strategy') private strategyModel: Model<IStrategy>,
     @InjectModel('UserPermission') private userPermissionModel: Model<IUserPermission>,
+    @InjectModel('BiconomyTransaction')
+    private biconomyTransactionModel: Model<IBiconomyTransaction>,
     private readonly kafkaService: KafkaService
   ) {
     this.hyperEvmProvider = new JsonRpcProvider(HYPEEVM_RPC)
@@ -226,6 +229,15 @@ export class BiconomyService {
         },
         { $inc: { usedCount: 1 } }
       )
+      // update db
+      await this.saveTransaction({
+        itxHash: executionPayload.hash,
+        node: receipt.node,
+        commitment: receipt.commitment,
+        recieptHashes: receipt.receipts.map((item) => item.transactionHash),
+        transactionStatus: receipt.transactionStatus.toString(),
+        paymentInfo: receipt.paymentInfo
+      })
 
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
@@ -236,6 +248,35 @@ export class BiconomyService {
       this.logger.error(JSON.stringify(logData), undefined, 'usePermision')
       console.log(error)
       throw new RpcException(error as object)
+    }
+  }
+
+  async saveTransaction(params: {
+    itxHash: string
+    node: string
+    commitment: string
+    recieptHashes: string[]
+    transactionStatus: string
+    paymentInfo: object
+  }) {
+    try {
+      const { itxHash, node, commitment, recieptHashes, transactionStatus, paymentInfo } = params
+      await this.biconomyTransactionModel.create({
+        itxHash,
+        node,
+        commitment,
+        recieptHashes,
+        transactionStatus,
+        // convert bigint type to string
+        paymentInfo: Object.fromEntries(
+          Object.entries(paymentInfo).map(([key, value]) => [
+            key,
+            value instanceof BigInt ? value.toString() : value
+          ])
+        )
+      })
+    } catch (error) {
+      console.log(`saveTransaction error: ${error}`)
     }
   }
 }

@@ -6,13 +6,15 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { strategySchema } from './schemas/strategy.schema.js'
 import { userPermissionSchema } from './schemas/user.permission.schema.js'
 import { KafkaModule } from '../kafka/kafka.module.js'
+import { biconomyTransactionSchema } from './schemas/biconomy.transaction.js'
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'StrategyUser', schema: strategyUserSchema },
       { name: 'Strategy', schema: strategySchema },
-      { name: 'UserPermission', schema: userPermissionSchema }
+      { name: 'UserPermission', schema: userPermissionSchema },
+      { name: 'BiconomyTransaction', schema: biconomyTransactionSchema }
     ]),
     KafkaModule
   ],
