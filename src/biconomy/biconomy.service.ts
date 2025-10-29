@@ -46,9 +46,10 @@ export class BiconomyService {
     txData: Instruction[]
     feeToken: string
     feeChainId: number
+    referenceId: string
   }) {
     try {
-      const { orchestratorAddress, strategyId, txData, feeToken, feeChainId } = params
+      const { orchestratorAddress, strategyId, txData, feeToken, feeChainId, referenceId } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
         orchestratorAddress: orchestratorAddress.toLowerCase()
@@ -244,7 +245,8 @@ export class BiconomyService {
         commitment: receipt.commitment,
         recieptHashes: receipt.receipts.map((item) => item.transactionHash),
         transactionStatus: receipt.transactionStatus.toString(),
-        paymentInfo: receipt.paymentInfo
+        paymentInfo: receipt.paymentInfo,
+        referenceId: referenceId || ''
       })
 
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
@@ -266,9 +268,18 @@ export class BiconomyService {
     recieptHashes: string[]
     transactionStatus: string
     paymentInfo: object
+    referenceId: string
   }) {
     try {
-      const { itxHash, node, commitment, recieptHashes, transactionStatus, paymentInfo } = params
+      const {
+        itxHash,
+        node,
+        commitment,
+        recieptHashes,
+        transactionStatus,
+        paymentInfo,
+        referenceId
+      } = params
       await this.biconomyTransactionModel.create({
         itxHash,
         node,
@@ -281,7 +292,8 @@ export class BiconomyService {
             key,
             value instanceof BigInt ? value.toString() : value
           ])
-        )
+        ),
+        referenceId
       })
     } catch (error) {
       console.log(`saveTransaction error: ${error}`)

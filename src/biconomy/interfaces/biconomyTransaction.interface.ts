@@ -7,4 +7,5 @@ export interface IBiconomyTransaction {
   transactionStatus: string
   createdAt?: Date
   updatedAt?: Date
+  referenceId?: string
 }

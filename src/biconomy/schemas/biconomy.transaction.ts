@@ -7,7 +7,8 @@ export const biconomyTransactionSchema = new Schema(
     commitment: { type: String, required: true },
     recieptHashes: { type: [String], required: false },
     transactionStatus: { type: String, required: false },
-    paymentInfo: { type: Object, required: false }
+    paymentInfo: { type: Object, required: false },
+    referenceId: { type: String, required: false }
   },
   {
     collection: 'biconomy_transactions',
