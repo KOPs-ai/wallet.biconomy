@@ -180,14 +180,14 @@ export class BiconomyService {
         (f) => f.sessionDetail?.permissionId === sessionDetailByActions[0].permissionId
       )
 
-      const permissionIsEnable = await sessionSignerSessionMeeClient.isPermissionEnabled({
-        permissionId: permissionUse?.sessionDetail?.permissionId,
-        chainId: Number(
-          permissionUse?.sessionDetail?.enableSessionData?.enableSession?.sessionToEnable?.chainId
-        )
-      })
-      // const mode = (permissionUse?.usedCount || 0) > 0 ? 'USE' : 'ENABLE_AND_USE'
-      const mode = permissionIsEnable ? 'USE' : 'ENABLE_AND_USE'
+      // const permissionIsEnable = await sessionSignerSessionMeeClient.isPermissionEnabled({
+      //   permissionId: permissionUse?.sessionDetail?.permissionId,
+      //   chainId: Number(
+      //     permissionUse?.sessionDetail?.enableSessionData?.enableSession?.sessionToEnable?.chainId
+      //   )
+      // })
+      const mode = permissionUse?.isEnable ? 'USE' : 'ENABLE_AND_USE'
+      // const mode = permissionIsEnable ? 'USE' : 'ENABLE_AND_USE'
 
       const verificationGas = BigInt(VERIFICATION_GAS_BASE)
 
@@ -200,7 +200,7 @@ export class BiconomyService {
         )
       }, 0)
       const verificationGasLimit = verificationGas - BigInt(Math.floor(totalCallGasLimit))
-      console.log({ totalCallGasLimit, verificationGasLimit, permissionIsEnable })
+      console.log({ totalCallGasLimit, verificationGasLimit })
 
       let permissionToUse: UseMeePermissionParams = {
         verificationGasLimit: verificationGasLimit,
@@ -210,6 +210,9 @@ export class BiconomyService {
         feeToken: {
           address: (feeToken as Hex) || ZeroAddress,
           chainId: feeChainId
+        },
+        simulation: {
+          simulate: true
         }
       }
       if (SPONSORSHIP === 'true') {
@@ -218,13 +221,16 @@ export class BiconomyService {
           sessionDetails: sessionDetailByActions,
           mode: mode,
           instructions: instructions,
-          sponsorship: true
+          sponsorship: true,
+          simulation: {
+            simulate: true
+          }
         }
       }
       console.log({ permissionToUse, sponsorship: SPONSORSHIP, mode })
 
       const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
-      console.log({ hash: executionPayload.hash })
+      console.log({ hash: executionPayload.hash, executionPayload })
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
         hash: executionPayload.hash
       })

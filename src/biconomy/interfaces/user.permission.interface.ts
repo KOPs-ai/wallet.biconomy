@@ -9,6 +9,7 @@ export interface IUserPermission {
   actionTarget?: string
   usedCount?: number
   permissionId?: string
+  isEnable: boolean
   createdAt?: Date
   updatedAt?: Date
 }
