@@ -242,7 +242,7 @@ export class BiconomyService {
           strategyId,
           'sessionDetail.permissionId': sessionDetailByActions[0].permissionId
         },
-        { $inc: { usedCount: 1 } }
+        { $inc: { usedCount: 1 }, isEnable: true }
       )
       // update db
       await this.saveTransaction({
