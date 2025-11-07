@@ -33,7 +33,7 @@ export class KafkaLogger implements LoggerService {
   ) {
     const { context, key, data, topic } = params
     try {
-      this.kafkaService.sendLog(topic || TOPIC_DEFAULT, {
+      this.kafkaService.sendLog(topic || TOPIC_DEFAULT, key || '', {
         level: 'log',
         ts: new Date().toISOString(),
         caller: context || '',
@@ -47,8 +47,8 @@ export class KafkaLogger implements LoggerService {
     }
   }
 
-  async error(message: any, trace?: string, context?: string) {
-    await this.kafkaService.sendLog(TOPIC_DEFAULT, {
+  async error(message: any, trace?: string, context?: string, key?: string) {
+    await this.kafkaService.sendLog(TOPIC_DEFAULT, key || '', {
       level: 'error',
       ts: new Date().toISOString(),
       caller: context,
@@ -68,7 +68,7 @@ export class KafkaLogger implements LoggerService {
     }
   ) {
     const { context, key, data, topic } = params
-    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, {
+    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, key || '', {
       level: 'warn',
       ts: new Date().toISOString(),
       caller: context,
@@ -89,7 +89,7 @@ export class KafkaLogger implements LoggerService {
     }
   ) {
     const { context, key, data, topic } = params
-    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, {
+    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, key || '', {
       level: 'debug',
       ts: new Date().toISOString(),
       caller: context,
@@ -110,7 +110,7 @@ export class KafkaLogger implements LoggerService {
     }
   ) {
     const { context, key, data, topic } = params
-    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, {
+    await this.kafkaService.sendLog(topic || TOPIC_DEFAULT, key || '', {
       level: 'verbose',
       ts: new Date().toISOString(),
       caller: context,

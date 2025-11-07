@@ -255,6 +255,8 @@ export class BiconomyService {
         referenceId: referenceId || ''
       })
 
+      this.logger.log('usePermision success', { key: 'usePermision', data: { receipt, params } })
+
       return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
     } catch (error) {
       const logData: ILogData = {

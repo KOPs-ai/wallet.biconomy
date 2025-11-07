@@ -26,12 +26,13 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     await this.producer.connect()
   }
 
-  async sendLog(topic: string, message: any) {
+  async sendLog(topic: string, key: string, message: any) {
     try {
       await this.producer.send({
         topic,
         messages: [
           {
+            key,
             value: JSON.stringify(message, (_, value) =>
               typeof value === 'bigint' ? value.toString() : value
             )
