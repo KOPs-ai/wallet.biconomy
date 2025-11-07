@@ -48,6 +48,7 @@ export class BiconomyService {
     feeChainId: number
     referenceId: string
   }) {
+    let meeHash: string = ''
     try {
       const { orchestratorAddress, strategyId, txData, feeToken, feeChainId, referenceId } = params
       const strategyUser = await this.strategyUserModel.findOne({
@@ -231,6 +232,7 @@ export class BiconomyService {
 
       const executionPayload = await sessionSignerSessionMeeClient.usePermission(permissionToUse)
       console.log({ hash: executionPayload.hash, executionPayload })
+      meeHash = executionPayload.hash
       const receipt = await sessionSignerMeeClient.waitForSupertransactionReceipt({
         hash: executionPayload.hash
       })
@@ -255,13 +257,16 @@ export class BiconomyService {
         referenceId: referenceId || ''
       })
 
-      this.logger.log('usePermision success', { key: 'usePermision', data: { receipt, params } })
+      this.logger.log('usePermision success', {
+        key: 'usePermision',
+        data: { meeHash: executionPayload.hash, params }
+      })
 
-      return { txHash: receipt.receipts[0].transactionHash, meeHash: executionPayload.hash }
+      return { txHash: receipt.receipts[0].transactionHash, meeHash }
     } catch (error) {
       const logData: ILogData = {
         key: 'usePermision',
-        data: { error, data: params }
+        data: { meeHash: meeHash || '', error, data: params }
       }
       this.logger.error(JSON.stringify(logData), undefined, 'usePermision')
       console.log(error)
