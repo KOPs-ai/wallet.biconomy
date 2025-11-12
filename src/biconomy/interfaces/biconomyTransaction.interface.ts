@@ -8,4 +8,6 @@ export interface IBiconomyTransaction {
   createdAt?: Date
   updatedAt?: Date
   referenceId?: string
+  account?: string
+  strategyId?: string
 }

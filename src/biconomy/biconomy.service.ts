@@ -49,8 +49,9 @@ export class BiconomyService {
     referenceId: string
   }) {
     let meeHash: string = ''
+    const { orchestratorAddress, strategyId, txData, feeToken, feeChainId, referenceId } = params
+
     try {
-      const { orchestratorAddress, strategyId, txData, feeToken, feeChainId, referenceId } = params
       const strategyUser = await this.strategyUserModel.findOne({
         strategyId,
         orchestratorAddress: orchestratorAddress.toLowerCase()
@@ -254,22 +255,39 @@ export class BiconomyService {
         recieptHashes: receipt.receipts.map((item) => item.transactionHash),
         transactionStatus: receipt.transactionStatus.toString(),
         paymentInfo: receipt.paymentInfo,
-        referenceId: referenceId || ''
+        referenceId: referenceId || '',
+        account: orchestratorAddress,
+        strategyId: strategyId
       })
 
       this.logger.log('usePermision success', {
         key: 'usePermision',
-        data: { meeHash: executionPayload.hash, params }
+        data: JSON.stringify({ meeHash: executionPayload.hash, params })
       })
 
       return { txHash: receipt.receipts[0].transactionHash, meeHash }
     } catch (error) {
       const logData: ILogData = {
         key: 'usePermision',
-        data: { meeHash: meeHash || '', error, data: params }
+        data: { meeHash: meeHash || '', error: error.toString(), data: params }
       }
       this.logger.error(JSON.stringify(logData), undefined, 'usePermision')
       console.log(error)
+      // update db
+      if (meeHash) {
+        await this.saveTransaction({
+          itxHash: meeHash,
+          node: '',
+          commitment: '',
+          recieptHashes: [],
+          transactionStatus: 'failed',
+          paymentInfo: {},
+          referenceId: referenceId || '',
+          account: orchestratorAddress,
+          strategyId: strategyId
+        })
+      }
+
       throw new RpcException(error as object)
     }
   }
@@ -282,6 +300,8 @@ export class BiconomyService {
     transactionStatus: string
     paymentInfo: object
     referenceId: string
+    account: string
+    strategyId: string
   }) {
     try {
       const {
@@ -291,7 +311,9 @@ export class BiconomyService {
         recieptHashes,
         transactionStatus,
         paymentInfo,
-        referenceId
+        referenceId,
+        account,
+        strategyId
       } = params
       await this.biconomyTransactionModel.create({
         itxHash,
@@ -306,7 +328,9 @@ export class BiconomyService {
             value instanceof BigInt ? value.toString() : value
           ])
         ),
-        referenceId
+        referenceId,
+        account,
+        strategyId
       })
     } catch (error) {
       console.log(`saveTransaction error: ${error}`)

@@ -27,7 +27,7 @@ export class KafkaLogger implements LoggerService {
     params: {
       context?: string
       key?: string
-      data?: Record<string, any>
+      data?: any
       topic?: string
     }
   ) {
@@ -41,6 +41,19 @@ export class KafkaLogger implements LoggerService {
         ...this.baseInfo,
         key,
         data
+      })
+      console.log('log send', {
+        topic: topic || TOPIC_DEFAULT,
+        key: key || '',
+        message: {
+          level: 'log',
+          ts: new Date().toISOString(),
+          caller: context || '',
+          message,
+          ...this.baseInfo,
+          key,
+          data
+        }
       })
     } catch (error) {
       console.log({ message, error })
